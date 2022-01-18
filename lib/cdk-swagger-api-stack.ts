@@ -1,15 +1,26 @@
 import * as cdk from '@aws-cdk/core';
-// import * as sqs from '@aws-cdk/aws-sqs';
+import * as api from '@aws-cdk/aws-apigateway';
+import * as assets from '@aws-cdk/aws-s3-assets';
+
+import { join } from 'path';
 
 export class CdkSwaggerApiStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
-
-    // The code that defines your stack goes here
-
-    // example resource
-    // const queue = new sqs.Queue(this, 'CdkSwaggerApiQueue', {
-    //   visibilityTimeout: cdk.Duration.seconds(300)
-    // });
+    
+    const fileAsset = new assets.Asset(this, 'SwaggerAsset', {
+        path: join(__dirname, '../tmp/swagger_full.yaml')
+    });
+    
+    const restApi = new api.CfnRestApi(this, 'API', {
+			endpointConfiguration: {
+				types: ['REGIONAL']
+			},
+	
+			bodyS3Location: {
+				bucket: fileAsset.s3BucketName,
+				key: fileAsset.s3ObjectKey
+			}
+		});
   }
 }
